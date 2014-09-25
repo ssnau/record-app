@@ -1,0 +1,39 @@
+{
+  "name": "react-playground",
+  "version": "0.0.0",
+  "description": "a reactJS template",
+  "main": "gulpfile.js",
+  "dependencies": {
+    "fluxxor": "^1.4.1",
+    "jsx-loader": "^0.11.0",
+    "react": "^0.11.2",
+    "react-bootstrap": "^0.12.0",
+    "run-sequence": "^0.3.7",
+    "yargs": "^1.3.1"
+  },
+  "devDependencies": {
+    "react": "^0.11.1",
+    "fluxxor": "^1.3.2",
+    "del": "^0.1.3",
+    "gulp": "^3.8.8",
+    "gulp-sass": "^0.7.2",
+    "gulp-autoprefixer": "0.0.8",
+    "gulp-bless": "^1.0.2",
+    "gulp-concat": "^2.2.0",
+    "gulp-cssfont64": "0.0.1",
+    "gulp-insert": "^0.4.0",
+    "gulp-minify-css": "^0.3.7",
+    "gulp-rename": "^1.2.0",
+    "gulp-replace": "^0.4.0",
+    "gulp-ttf2woff": "0.0.8",
+    "gulp-uglifyjs": "^0.4.0",
+    "gulp-util": "^2.2.19",
+    "gulp-webpack": "^0.1.0",
+    "compression": "^1.0.8"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "ssnau",
+  "license": "ISC"
+}
