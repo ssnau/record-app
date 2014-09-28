@@ -2,6 +2,8 @@
 var React = require('react');
 var Button = require('react-bootstrap/Button');
 
+window.React = React;
+
 function __log(e, data) {
     console.log(e, data || '');
 }
@@ -48,42 +50,85 @@ var Player = React.createClass({
             </li>
         );
     }
-})
+});
 
-var App = React.createClass({
-    getInitialState: function() {
+var Grid = require('react-bootstrap/Grid');
+var Row = require('react-bootstrap/Row');
+var Col = require('react-bootstrap/Col');
+var Struct = React.createClass({
+    render: function(){
+        return (
+            <Grid>
+                <Row className="show-grid">
+                 <Col xs={12} md={8}>{this.props.content}</Col>
+                 <Col xs={6} md={4}>{this.props.sidebar}</Col>
+                </Row>
+            </Grid>
+        );
+    }
+});
+
+var PlayerList = React.createClass({
+    getInitialState: function(){
         return {
             audios: []
         };
     },
+    render: function() {
+        var ListGroup = require('react-bootstrap/ListGroup'),
+            ListGroupItem = require('react-bootstrap/ListGroupItem');
+
+        var items = this.state.audios.map(function(audio){
+            return (
+                <ListGroupItem>
+                    <Player url={audio.url} />
+                </ListGroupItem>
+            );
+        });
+        return (
+            <ListGroup>
+                {items}
+            </ListGroup>
+        );
+    }
+});
+
+var RecordPanel = React.createClass({
     record: function(){
         recorder.record();
     },
     stop: function() {
         recorder.stop();
-        var audios = this.state.audios;
-        var me = this;
+        var audios = this.sideContent.state.audios;
+        var sideContent = this.sideContent;
         recorder && recorder.exportWAV(function(blob) {
             var url = URL.createObjectURL(blob);
             console.log(url);
-            me.setState({
+            sideContent.setState({
                 audios: audios.concat({url: url})
             });
         });
 
     },
     render: function() {
-        var audios = this.state.audios;
         return (
-            <div>
+            <Row>
                 <Button bsStyle="primary" onClick={this.record}>Record</Button>
                 <Button bsStyle="primary" onClick={this.stop}>Stop</Button>
-                <ul>
-                {audios.map(function(audio){
-                    return <Player url={audio.url} />
-                })}
-                </ul>
-            </div>);
+            </Row>
+        );
+    }
+})
+
+var App = React.createClass({
+    sideContent:  (
+        <PlayerList />
+    ),
+
+    render: function() {
+        return (
+            <Struct content={this.content} sidebar={this.sideContent} />
+        );
     }
 });
 
