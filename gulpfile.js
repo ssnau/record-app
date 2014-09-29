@@ -30,6 +30,7 @@ var port = argv.port ? argv.port : 8080;
 var paths = {
   index: ['src/static/jsx/'+defaultAppName+'/index.html', 'service.js'],
   jsx: ['src/static/jsx/*.jsx',  'src/static/jsx/**/*.jsx', 'src/static/jsx/**/**/*.jsx', 'src/static/jsx/**/**/**/*.jsx'], 
+  js: ['src/static/jsx/*.js',  'src/static/jsx/**/*.js', 'src/static/jsx/**/**/*.js', 'src/static/jsx/**/**/**/*.js'],
   scss: ['src/static/scss/*.scss','src/static/scss/**/*.scss']
 };
 
@@ -173,7 +174,7 @@ if(production) {
   });
 } else {
   gulp.task('default', function(callback) {
-    runSequence('build:css', 'build:essentials', 'build:app', ['express', 'watch'], callback);
+    runSequence('build:css', 'build:app', ['express', 'watch'], callback);
   });  
 }
 
@@ -185,7 +186,7 @@ gulp.task('rebuild:css', ['build:css'], ready);
 /*END: ALIASES*/
 
 gulp.task('watch', function() {
-  gulp.watch(paths.jsx, ['build:app:watch']);
+  gulp.watch(paths.jsx.concat(paths.js), ['build:app:watch']);
   gulp.watch(paths.index, ['express:watch']);
   gulp.watch(paths.scss, ['rebuild:css']);
 });

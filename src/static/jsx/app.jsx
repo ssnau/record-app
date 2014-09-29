@@ -1,46 +1,11 @@
 /** @jsx React.DOM */
-var React = require('react');
-var Button = require('react-bootstrap/Button');
 
-window.React = React;
+var BS = ReactBootstrap;
+var Fluxxor = require("fluxxor"),
+    FluxMixin = Fluxxor.FluxMixin(React),
+    FluxChildMixin = Fluxxor.FluxChildMixin(React),
+    StoreWatchMixin = Fluxxor.StoreWatchMixin;
 
-function __log(e, data) {
-    console.log(e, data || '');
-}
-
-var audio_context;
-var recorder;
-
-function startUserMedia(stream) {
-    var input = audio_context.createMediaStreamSource(stream);
-    __log('Media stream created.');
-    console.log(audio_context);
-    //input.connect(audio_context.destination);
-    input.connect(audio_context.createMediaStreamDestination());
-    __log('Input connected to audio context destination.');
-
-    recorder = new Recorder(input, {
-        workerPath: "bower_components/Recorderjs/recorderWorker.js"
-    });
-    __log('Recorder initialised.');
-}
-
-try {
-    // webkit shim
-    window.AudioContext = window.AudioContext || window.webkitAudioContext;
-    navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia;
-    window.URL = window.URL || window.webkitURL;
-
-    audio_context = new AudioContext;
-    __log('Audio context set up.');
-    __log('navigator.getUserMedia ' + (navigator.getUserMedia ? 'available.' : 'not present!'));
-} catch (e) {
-    alert('No web audio support in this browser!');
-}
-
-navigator.getUserMedia({audio: true}, startUserMedia, function(e) {
-    __log('No live audio input: ' + e);
-});
 
 var Player = React.createClass({
     render: function(){
@@ -52,11 +17,11 @@ var Player = React.createClass({
     }
 });
 
-var Grid = require('react-bootstrap/Grid');
-var Row = require('react-bootstrap/Row');
-var Col = require('react-bootstrap/Col');
 var Struct = React.createClass({
     render: function(){
+        var Grid = BS.Grid;
+        var Col = BS.Col;
+        var Row = BS.Row;
         return (
             <Grid>
                 <Row className="show-grid">
@@ -69,16 +34,17 @@ var Struct = React.createClass({
 });
 
 var PlayerList = React.createClass({
-    getInitialState: function(){
-        return {
-            audios: []
-        };
+    mixins: [FluxChildMixin, StoreWatchMixin('recordStore')],
+    getStateFromFlux: function () {
+      return {
+          audios: this.getFlux().store('recordStore').records
+      };
     },
     render: function() {
-        var ListGroup = require('react-bootstrap/ListGroup'),
-            ListGroupItem = require('react-bootstrap/ListGroupItem');
-
-        var items = this.state.audios.map(function(audio){
+        var ListGroupItem = BS.ListGroupItem;
+        var ListGroup = BS.ListGroupItem;
+        var audios = this.state.audios;
+        var items = audios.map(function(audio){
             return (
                 <ListGroupItem>
                     <Player url={audio.url} />
@@ -94,23 +60,16 @@ var PlayerList = React.createClass({
 });
 
 var RecordPanel = React.createClass({
-    record: function(){
-        recorder.record();
+    mixins: [FluxChildMixin],
+    record: function () {
+        this.getFlux().actions.record();
     },
     stop: function() {
-        recorder.stop();
-        var audios = this.sideContent.state.audios;
-        var sideContent = this.sideContent;
-        recorder && recorder.exportWAV(function(blob) {
-            var url = URL.createObjectURL(blob);
-            console.log(url);
-            sideContent.setState({
-                audios: audios.concat({url: url})
-            });
-        });
-
+        this.getFlux().actions.stop();
     },
     render: function() {
+        var Row = BS.Row,
+            Button = BS.Button;
         return (
             <Row>
                 <Button bsStyle="primary" onClick={this.record}>Record</Button>
@@ -118,18 +77,25 @@ var RecordPanel = React.createClass({
             </Row>
         );
     }
-})
+});
 
 var App = React.createClass({
-    sideContent:  (
-        <PlayerList />
-    ),
+    mixins: [FluxMixin/*, Fluxxor.StoreWatchMixin("recordStore")*/],
 
     render: function() {
         return (
-            <Struct content={this.content} sidebar={this.sideContent} />
+            <Struct content={<RecordPanel />} sidebar={<PlayerList />} />
         );
     }
 });
 
-React.renderComponent(<App />, document.getElementById('example'));
+
+var RecordStore = require("./stores/RecordStore");
+var actions = require("./actions");
+var stores = {
+    recordStore: new RecordStore()
+};
+var flux = new Fluxxor.Flux(stores, actions);
+window.flux = flux; //for debug
+
+React.renderComponent(<App flux={flux}/>, document.getElementById('example'));
