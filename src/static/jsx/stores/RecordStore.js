@@ -27,6 +27,7 @@ var RecordStore = Fluxxor.createStore({
             me.records.push({
                 url: url
             });
+            recorder.clear();
             me.emit('change');
         });
     }

@@ -1,14 +1,12 @@
 var audio_context;
 var recorder;
-var inited = false;
 
 function __log(e, data) {
     console.log(e, data || '');
 }
 
 function init() {
-    if (inited) return;
-    inited = true;
+    if (audio_context) return;
     function startUserMedia(stream) {
         var input = audio_context.createMediaStreamSource(stream);
         __log('Media stream created.');
@@ -45,8 +43,6 @@ init();
 
 module.exports = {
     getRecorder: function() {
-        if (recorder) {
-            return recorder;
-        }
+        return recorder;
     }
 };

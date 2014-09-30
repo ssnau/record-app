@@ -34,16 +34,11 @@ var Struct = React.createClass({
 });
 
 var PlayerList = React.createClass({
-    mixins: [FluxChildMixin, StoreWatchMixin('recordStore')],
-    getStateFromFlux: function () {
-      return {
-          audios: this.getFlux().store('recordStore').records
-      };
-    },
+    mixins: [FluxChildMixin],
     render: function() {
         var ListGroupItem = BS.ListGroupItem;
         var ListGroup = BS.ListGroupItem;
-        var audios = this.state.audios;
+        var audios = this.props.audios;
         var items = audios.map(function(audio){
             return (
                 <ListGroupItem>
@@ -59,10 +54,65 @@ var PlayerList = React.createClass({
     }
 });
 
+var CountTime = React.createClass({
+    getInitialState: function () {
+        return {
+            time: ''
+        }
+    },
+    stop: function () {
+        window.clearInterval(this.handler);
+        this.setState({time:''});
+    },
+    start: function () {
+        var me = this,
+            start = new Date();
+        me.setState({time: "00:00:00"});
+        this.handler = window.setInterval(function () {
+            var now = new Date() - 0,
+                diff = now - start;
+
+            var ms = Math.floor(diff % 1000 / 10),
+                s  = Math.floor(diff / 1000 % 3600 % 60),
+                min = Math.floor( diff / 1000 % 3600 / 60);
+
+            me.setState({
+                time: min + ":" + s + ":" + ms
+            });
+        }, 10);
+    },
+    componentWillUnmount: function () {
+        window.clearInterval(this.handler);
+    },
+    render: function () {
+        return (
+            <div>{this.state.time}</div>
+        )
+    }
+});
+
 var RecordPanel = React.createClass({
     mixins: [FluxChildMixin],
-    record: function () {
-        this.getFlux().actions.record();
+    recording: false,
+    getInitialState: function () {
+        return {
+            action: "Record"
+        };
+    },
+    act: function () {
+        if (this.recording) {
+            this.getFlux().actions.stop();
+            this.recording = false;
+            this.refs.countComponent.stop();
+        } else {
+            this.getFlux().actions.record();
+            this.recording = true;
+            this.refs.countComponent.start();
+        }
+
+        this.setState({
+            'action': this.recording ? 'Stop' : 'Record'
+        });
     },
     stop: function() {
         this.getFlux().actions.stop();
@@ -72,19 +122,25 @@ var RecordPanel = React.createClass({
             Button = BS.Button;
         return (
             <Row>
-                <Button bsStyle="primary" onClick={this.record}>Record</Button>
-                <Button bsStyle="primary" onClick={this.stop}>Stop</Button>
+                <Button bsStyle="primary" onClick={this.act}>{this.state.action}</Button>
+                <CountTime ref="countComponent"/>
             </Row>
         );
     }
 });
 
 var App = React.createClass({
-    mixins: [FluxMixin/*, Fluxxor.StoreWatchMixin("recordStore")*/],
+    mixins: [FluxMixin, Fluxxor.StoreWatchMixin("recordStore")],
+
+    getStateFromFlux: function () {
+        return {
+            audios: this.getFlux().store('recordStore').records
+        }
+    },
 
     render: function() {
         return (
-            <Struct content={<RecordPanel />} sidebar={<PlayerList />} />
+            <Struct content={<RecordPanel />} sidebar={<PlayerList audios={this.state.audios}/>} />
         );
     }
 });
